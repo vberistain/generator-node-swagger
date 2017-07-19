@@ -5,7 +5,7 @@
   "homepage": "",
   "author": {
     "name": "Victor Beristain",
-    "email": "victor@pantaflix.com",
+    "email": "vberistain@gmail.com",
     "url": ""
   },
   "files": [
@@ -44,7 +44,7 @@
       "mocha": true
     }
   },
-  "repository": "Pantaflix/generator-nodegen",
+  "repository": "https://github.com/vberistain/nodegen.git",
   "scripts": {
     "prepublish": "gulp prepublish",
     "test": "gulp"
