@@ -1,16 +1,17 @@
 'use strict';
 const Generator = require('yeoman-generator');
 const fs = require('fs');
-const swaggerIndexFilePath = 'swagger/index.json';
+const SWAGGER_INDEX_FILE_PATH = 'swagger/index.json';
 const pluralize = require('pluralize');
 const enums = require('../../enums');
 const seq = require('promise-sequential');
+const writeFile = require('node-fs-writefile-promise');
 
-const OPERATIONS = Object.keys(enums.SWAGGER_OPERATIONS).map(key => {
+const OPERATIONS = Object.keys(enums.SWAGGER_OPERATIONS).map((key, i) => {
     return {
         name: enums.SWAGGER_OPERATIONS[key],
         value: enums.SWAGGER_OPERATIONS[key],
-        checked: false
+        checked: i === 0
     }
 });
 
@@ -27,48 +28,6 @@ const SWAGGER_PARAMETERS_TYPE = Object.keys(enums.SWAGGER_PARAMETERS_TYPE).map(k
         value: enums.SWAGGER_PARAMETERS_TYPE[key]
     }
 });
-
-
-const addSwaggerPath = (routePath, routeName) => {
-    console.log(swaggerIndexFilePath);
-    var swaggerIndex = JSON.parse(fs.readFileSync(swaggerIndexFilePath).toString());
-    swaggerIndex.paths[routePath] = {
-        $ref: `./swagger/paths/${routeName}.json`
-    };
-    fs.writeFile(swaggerIndexFilePath, JSON.stringify(swaggerIndex, null, 4));
-};
-
-const addSwaggerParams = (routePath, routeName, routeFilePath) => {
-    console.log(routeFilePath);
-    try {
-        var swaggerPathFile = JSON.parse(fs.readFileSync(routeFilePath).toString());
-    }
-
-    catch(e) {
-        createSwaggerRoute(routePath, routeName, routeFilePath)
-    }
-
-    swaggerPathFile.paths[routePath] = {
-        $ref: `./swagger/paths/${routeName}.json`
-    };
-    fs.writeFile(swaggerIndexFilePath, JSON.stringify(swaggerPathFile, null, 4));
-};
-
-
-const stringToParams = (paramString) => {
-    var res = [];
-    if (!paramString) {
-        return res;
-    }
-    var params = paramString.replace(/\s+/g, '').split(',');
-    params.forEach(function (param) {
-        res.push({
-            name: param.split(':')[0],
-            type: param.split(':')[1]
-        });
-    });
-    return res;
-};
 
 module.exports = class extends Generator {
 
@@ -93,8 +52,14 @@ module.exports = class extends Generator {
         this.operationPrompts = [
             {
                 type: 'input',
-                name: 'operationDescription',
+                name: 'description',
                 message: `Write a description for the %operation% operation`
+            },
+            {
+                type: 'input',
+                name: 'id',
+                message: 'Write a function Name',
+                default: `%operation%${this.routeName.charAt(0).toUpperCase() + this.routeName.slice(1)}`
             }
         ];
 
@@ -102,31 +67,31 @@ module.exports = class extends Generator {
             {
                 type: 'confirm',
                 name: 'newParam',
-                message: 'Would you like to add a/more parameters to the endpoint'
+                message: 'Add parameter?'
             }
         ]
         this.parametersPrompts = [
             {
                 type: 'input',
-                name: 'paramName',
-                message: 'Name:'
+                name: 'name',
+                message: 'Parameter name:'
             },
             {
                 type: 'list',
-                name: 'paramIn',
-                message: 'In:',
+                name: 'in',
+                message: 'Parameter In:',
                 choices: SWAGGER_PARAMETERS_IN
             },
             {
                 type: 'list',
-                name: 'paramType',
-                message: 'Type:',
+                name: 'type',
+                message: 'Parameter Type:',
                 choices: SWAGGER_PARAMETERS_TYPE
             },
             {
                 type: 'input',
-                name: 'paramDescription',
-                message: 'Description:'
+                name: 'description',
+                message: 'Parameter Description:'
             }
 
         ]
@@ -140,64 +105,99 @@ module.exports = class extends Generator {
                         .then(results => {
                             parameters.push(results)
                             return this._promptParameters(parameters)
-                        })
+                        });
                 }
                 else {
                     return parameters;
                 }
-            })
+            });
     }
 
 
-    _promptOperations(operation, i, props, originalMessage) {
-        this.operationPrompts[0].message = originalMessage.replace('%operation%', operation.toUpperCase());
-        return this.prompt(this.operationPrompts)
-            .then(operationResults => {
-                const op = props.operations[i]
-                props.operations[i] = {
-                    operation: op,
-                    description: operationResults.operationDescription
-                };
-                return props
-            })
+    _promptOperations(props) {
+        const originalMessage = this.operationPrompts[0].message;
+        const defaultValue = this.operationPrompts[1].default;
+
+        return props.operations.map((operation, i) => (() => {
+            this.operationPrompts[0].message = originalMessage.replace('%operation%', operation.toUpperCase());
+            this.operationPrompts[1].default = defaultValue.replace('%operation%', operation);
+
+            return this.prompt(this.operationPrompts)
+                .then(operationResults => {
+                    const op = props.operations[i]
+                    props.operations[i] = {
+                        operation: op,
+                        description: operationResults.description,
+                        id: operationResults.id
+                    };
+                    return props
+                })
+                .then(() => this._promptParameters())
+                .then(parameters => {
+                    props.operations[i].parameters = parameters;
+                    return props;
+                });
+        }));
     }
 
     prompting(routeName) {
-
-        let properties = {};
-        const originalMessage = this.operationPrompts[0].message;
-
         return this.prompt(this.initPrompts)
-            .then(props => seq(
-                props.operations.map((operation, i) => (
-                    () => this._promptOperations(operation, i, props, originalMessage)
-                        .then(() => this._promptParameters())
-                        .then(parameters => {
-                            props.operations[i].parameters = parameters;
-                            return props;
-                        })
-                ))
-            )
-            .then(() => {
-                this.props = props;
-            }));
+            .then(props => seq(this._promptOperations(props)))
+            .then(data => {
+                this.props = data[data.length - 1];
+            });
+    }
+
+    _createSwaggerPathFile(route, content) {
+        return writeFile(route, JSON.stringify(content, null, 4))
+            .catch(() => {
+                throw new Error(`There was a problem creating "${routeName}.json"`)
+            })
+    }
+
+    _addRouteToSwagger(routePath, routeName) {
+        let swaggerIndex = JSON.parse(fs.readFileSync(SWAGGER_INDEX_FILE_PATH).toString());
+        swaggerIndex.paths[routePath] = {
+            $ref: `./swagger/paths/${routeName}.json`
+        };
+        return writeFile(SWAGGER_INDEX_FILE_PATH, JSON.stringify(swaggerIndex, null, 4))
+            .catch(() => {
+                throw new Error(`There was a problem adding ${routeName}`)
+            })
+    }
+
+    _buildPathFile(props) {
+        let file = {};
+        console.log(props);
+        props.operations.forEach(operation => {
+            file[operation.operation] = {
+                description: operation.description,
+                sumary: operation.id,
+                'x-swagger-router-controller': props.routeController,
+                operationId: operation.id,
+                parameters: operation.parameters.map(parameter => {
+                    return {
+                        name: parameter.name,
+                        in: parameter.in,
+                        description: parameter.description,
+                        type: parameter.type
+                    }
+                })
+                
+            }
+        });
+        return file;
     }
 
     writing(routeName) {
-        console.dir(this.props, {depth: 10});
-        // addSwaggerPath(routePath, routeName);
-        // this.fs.copyTpl(
-        //     this.templatePath('path.json'),
-        //     this.destinationPath(`swagger/paths/${routeName}.json`), {
-        //         routeName: routeName,
-        //         routeDescription: this.props.routeDescription,
-        //         routeController: this.props.routeController,
-        //         routeOperationId: routeName
-        //     }
-        // );
+        const swaggerPathFileContent = this._buildPathFile(this.props);
 
-        // var properties = stringToParams(propString);
-        // addSwaggerParams(routePath, properties, `swagger/paths/${routeName}.json`);
+        return Promise.all([
+            this._addRouteToSwagger(routeName, this.props.routeController)
+                .then(() => console.log(`Route ${routeName} added correctly`)),
+            this._createSwaggerPathFile(`swagger/paths/${routeName}.json`, swaggerPathFileContent)
+                .then(() => console.log(`Path file "${routeName}.json" created successfuly`))
+        ]);
     }
 
 };
