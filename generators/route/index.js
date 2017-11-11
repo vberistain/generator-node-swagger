@@ -14,16 +14,16 @@ const OPERATIONS = Object.keys(enums.SWAGGER_OPERATIONS).map(key => {
     }
 });
 
-function addSwaggerPath(routePath, routeName) {
+const addSwaggerPath = (routePath, routeName) => {
     console.log(swaggerIndexFilePath);
     var swaggerIndex = JSON.parse(fs.readFileSync(swaggerIndexFilePath).toString());
     swaggerIndex.paths[routePath] = {
         $ref: `./swagger/paths/${routeName}.json`
     };
     fs.writeFile(swaggerIndexFilePath, JSON.stringify(swaggerIndex, null, 4));
-}
+};
 
-function addSwaggerParams(routePath, routeName, routeFilePath) {
+const addSwaggerParams = (routePath, routeName, routeFilePath) => {
     console.log(routeFilePath);
     try {
         var swaggerPathFile = JSON.parse(fs.readFileSync(routeFilePath).toString());
@@ -37,10 +37,10 @@ function addSwaggerParams(routePath, routeName, routeFilePath) {
         $ref: `./swagger/paths/${routeName}.json`
     };
     fs.writeFile(swaggerIndexFilePath, JSON.stringify(swaggerPathFile, null, 4));
-}
+};
 
 
-function stringToParams(paramString) {
+const stringToParams = (paramString) => {
     var res = [];
     if (!paramString) {
         return res;
@@ -53,7 +53,7 @@ function stringToParams(paramString) {
         });
     });
     return res;
-}
+};
 
 module.exports = class extends Generator {
 
@@ -84,46 +84,33 @@ module.exports = class extends Generator {
         ];
     }
 
+    _promptOperations(operation, i, props, originalMessage) {
+        this.operationPrompts[0].message = originalMessage.replace('%operation%', operation.toUpperCase());
+        return this.prompt(this.operationPrompts)
+            .then(operationResults => {
+                const op = props.operations[i]
+                props.operations[i] = {
+                    operation: op,
+                    description: operationResults.operationDescription
+                };
+                return props
+            })
+    }
+
     prompting(routeName) {
 
         let properties = {};
         const originalMessage = this.operationPrompts[0].message;
 
         return this.prompt(this.initPrompts)
-            .then(props => {
-                return seq(props.operations.map((operation, i) => {
-                    return (() => {
-                        this.operationPrompts[0].message = originalMessage.replace('%operation%', operation.toUpperCase());
-                        return this.prompt(this.operationPrompts)
-                            .then(operationResults => {
-                                const op = props.operations[i]
-                                props.operations[i] = {
-                                    operation: op,
-                                    description: operationResults.operationDescription
-                                };
-                                return props
-                            })
-                        })
-                }))
-                .then(() => {
-                    this.props = props;
-                })
-
-                // for (let operation of properties.operations) {
-                //     operationPrompts[0].message = operationPrompts[0].message.replace('%operation%', operation.toUpperCase());
-
-                //     let result = await execPromp(operationPrompts);
-                //     const op = properties.operations[i]
-                //     properties.operations[i] = {
-                //         operation: op,
-                //         description: operationProps.operationDescription
-                //     };
-                //     console.log(result);
-                // }
-
-                // console.log('DONE', properties);
-
-            });
+            .then(props => seq(
+                props.operations.map((operation, i) => (
+                    () => this._promptOperations(operation, i, props, originalMessage)
+                ))
+            )
+            .then(() => {
+                this.props = props;
+            }));
     }
 
     writing(routeName) {
