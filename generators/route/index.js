@@ -14,6 +14,21 @@ const OPERATIONS = Object.keys(enums.SWAGGER_OPERATIONS).map(key => {
     }
 });
 
+const SWAGGER_PARAMETERS_IN = Object.keys(enums.SWAGGER_PARAMETERS_IN).map(key => {
+    return {
+        name: enums.SWAGGER_PARAMETERS_IN[key],
+        value: enums.SWAGGER_PARAMETERS_IN[key]
+    }
+});
+
+const SWAGGER_PARAMETERS_TYPE = Object.keys(enums.SWAGGER_PARAMETERS_TYPE).map(key => {
+    return {
+        name: enums.SWAGGER_PARAMETERS_TYPE[key],
+        value: enums.SWAGGER_PARAMETERS_TYPE[key]
+    }
+});
+
+
 const addSwaggerPath = (routePath, routeName) => {
     console.log(swaggerIndexFilePath);
     var swaggerIndex = JSON.parse(fs.readFileSync(swaggerIndexFilePath).toString());
@@ -82,7 +97,57 @@ module.exports = class extends Generator {
                 message: `Write a description for the %operation% operation`
             }
         ];
+
+        this.moreParametersPrompts = [
+            {
+                type: 'confirm',
+                name: 'newParam',
+                message: 'Would you like to add a/more parameters to the endpoint'
+            }
+        ]
+        this.parametersPrompts = [
+            {
+                type: 'input',
+                name: 'paramName',
+                message: 'Name:'
+            },
+            {
+                type: 'list',
+                name: 'paramIn',
+                message: 'In:',
+                choices: SWAGGER_PARAMETERS_IN
+            },
+            {
+                type: 'list',
+                name: 'paramType',
+                message: 'Type:',
+                choices: SWAGGER_PARAMETERS_TYPE
+            },
+            {
+                type: 'input',
+                name: 'paramDescription',
+                message: 'Description:'
+            }
+
+        ]
     }
+    
+    _promptParameters(parameters = [], params) {
+        return this.prompt(this.moreParametersPrompts)
+            .then(res => {
+                if (res.newParam) {
+                    return this.prompt(this.parametersPrompts)
+                        .then(results => {
+                            parameters.push(results)
+                            return this._promptParameters(parameters)
+                        })
+                }
+                else {
+                    return parameters;
+                }
+            })
+    }
+
 
     _promptOperations(operation, i, props, originalMessage) {
         this.operationPrompts[0].message = originalMessage.replace('%operation%', operation.toUpperCase());
@@ -106,6 +171,11 @@ module.exports = class extends Generator {
             .then(props => seq(
                 props.operations.map((operation, i) => (
                     () => this._promptOperations(operation, i, props, originalMessage)
+                        .then(() => this._promptParameters())
+                        .then(parameters => {
+                            props.operations[i].parameters = parameters;
+                            return props;
+                        })
                 ))
             )
             .then(() => {
