@@ -21,6 +21,7 @@ function stringToParams(paramString) {
 
 
 module.exports = yeoman.Base.extend({
+
     prompting: function (modelName, modelProperties) {
         var prompts = [];
 
@@ -28,9 +29,10 @@ module.exports = yeoman.Base.extend({
           this.props = props;
         }.bind(this));
     },
+
     writing: function (modelName, modelProperties) {
         var modelCapitalized = modelName.charAt(0).toUpperCase() + modelName.slice(1);
-        console.log(modelCapitalized);
+
         var properties = stringToParams(modelProperties);
         this.fs.copyTpl(
             this.templatePath('model.js'),

@@ -1,7 +1,7 @@
 {
-  "name": "generator-nodegen",
+  "name": "nodegen",
   "version": "0.0.0",
-  "description": "NodeJS generator",
+  "description": "NodeJS Express + Swagger + Sequelize generator",
   "homepage": "",
   "author": {
     "name": "Victor Beristain",
@@ -15,13 +15,14 @@
   ],
   "main": "generators/index.js",
   "keywords": [
-    "",
     "yeoman-generator"
   ],
   "dependencies": {
     "chalk": "^1.0.0",
     "moment": "^2.17.0",
-    "yeoman-generator": "^0.23.0",
+    "pluralize": "^7.0.0",
+    "promise-sequential": "^1.1.1",
+    "yeoman-generator": "^2.0.1",
     "yosay": "^1.0.0"
   },
   "devDependencies": {
