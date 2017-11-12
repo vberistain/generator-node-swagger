@@ -1,6 +1,5 @@
 'use strict';
 var yeoman = require('yeoman-generator');
-var fs = require('fs');
 
 module.exports = yeoman.Base.extend({
     prompting: function () {

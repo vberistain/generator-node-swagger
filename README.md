@@ -1,4 +1,4 @@
-# generator-nodegen [![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Dependency Status][daviddm-image]][daviddm-url]
+# node-swagger [![NPM version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Dependency Status][daviddm-image]][daviddm-url]
 > NodeJS generator
 
 ## Installation
@@ -7,13 +7,22 @@ First, install [Yeoman](http://yeoman.io) and generator-nodegen using [npm](http
 
 ```bash
 npm install -g yo
-npm install -g generator-nodegen
+npm install -g generator-node-swagger
 ```
+
 
 Then generate your new project:
 
 ```bash
-yo nodegen
+yo node-swagger
+```
+
+## Scafolding
+
+New route:
+
+```bash
+yo node-swagger:route users
 ```
 
 ## Getting To Know Yeoman

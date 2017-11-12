@@ -130,7 +130,7 @@ module.exports = class extends Generator {
                         description: operationResults.description,
                         id: operationResults.id
                     };
-                    return props
+                    return props;
                 })
                 .then(() => this._promptParameters())
                 .then(parameters => {
@@ -168,7 +168,7 @@ module.exports = class extends Generator {
 
     _buildPathFile(props) {
         let file = {};
-        console.log(props);
+
         props.operations.forEach(operation => {
             file[operation.operation] = {
                 description: operation.description,

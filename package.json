@@ -1,11 +1,11 @@
 {
-  "name": "nodegen",
-  "version": "0.0.0",
+  "name": "generator-node-swagger",
+  "version": "0.1.0",
   "description": "NodeJS Express + Swagger + Sequelize generator",
   "homepage": "",
   "author": {
     "name": "Victor Beristain",
-    "email": "vberistain@gmail.com",
+    "email": "victor@pantaflix.com",
     "url": ""
   },
   "files": [
@@ -15,6 +15,10 @@
   ],
   "main": "generators/index.js",
   "keywords": [
+    "nodejs",
+    "swagger",
+    "sequelize",
+    "express",
     "yeoman-generator"
   ],
   "dependencies": {
@@ -38,7 +42,8 @@
     "gulp-istanbul": "^1.0.0",
     "gulp-mocha": "^3.0.1",
     "gulp-plumber": "^1.0.0",
-    "gulp-nsp": "^2.1.0"
+    "gulp-nsp": "^2.1.0",
+    "gulp-coveralls": "^0.1.0"
   },
   "eslintConfig": {
     "extends": "xo-space",
@@ -46,10 +51,10 @@
       "mocha": true
     }
   },
-  "repository": "https://github.com/vberistain/nodegen.git",
+  "repository": "https://github.com/vberistain/node-swagger.git",
   "scripts": {
     "prepublish": "gulp prepublish",
     "test": "gulp"
   },
-  "license": "Apache-2.0"
+  "license": "MIT"
 }
