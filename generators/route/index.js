@@ -151,7 +151,7 @@ module.exports = class extends Generator {
     _createSwaggerPathFile(route, content) {
         return writeFile(route, JSON.stringify(content, null, 4))
             .catch(() => {
-                throw new Error(`There was a problem creating "${routeName}.json"`)
+                throw new Error(`There was a problem creating "${route}.json"`)
             })
     }
 

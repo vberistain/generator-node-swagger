@@ -1,11 +1,11 @@
 {
   "name": "generator-node-swagger",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "NodeJS Express + Swagger + Sequelize generator",
   "homepage": "",
   "author": {
     "name": "Victor Beristain",
-    "email": "victor@pantaflix.com",
+    "email": "vberistain2@gmail.com",
     "url": ""
   },
   "files": [
