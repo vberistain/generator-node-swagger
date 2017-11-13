@@ -15,7 +15,6 @@ function stringToParams(paramString) {
             type: param.split(':')[1]
         });
     });
-    console.log(res);
     return res;
 }
 
@@ -35,14 +34,14 @@ module.exports = yeoman.Base.extend({
 
         var properties = stringToParams(modelProperties);
         this.fs.copyTpl(
-            this.templatePath('model.js'),
+            this.templatePath('model.js.template'),
             this.destinationPath(`src/models/${modelCapitalized}.js`), {
                 modelName: modelCapitalized,
                 properties: properties
             }
         );
         this.fs.copyTpl(
-            this.templatePath('migration.js'),
+            this.templatePath('migration.js.template'),
             this.destinationPath(`migrations/${moment().format('YYYYMMDDHHmmss')}.js`), {
                 modelName: modelCapitalized,
                 properties: properties

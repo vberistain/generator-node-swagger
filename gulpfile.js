@@ -37,15 +37,15 @@ gulp.task('test', ['pre-test'], function (cb) {
     .pipe(mocha({reporter: 'spec'}))
     .on('error', function (err) {
       mochaErr = err;
+      console.log(err);
     })
-    .pipe(istanbul.writeReports())
     .on('end', function () {
       cb(mochaErr);
     });
 });
 
 gulp.task('watch', function () {
-  gulp.watch(['generators/**/*.js', 'test/**'], ['test']);
+    gulp.watch(['generators/**/*.js', 'test/**'], ['test']);
 });
 
 gulp.task('prepublish', ['nsp']);

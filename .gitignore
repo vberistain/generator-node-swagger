@@ -6,3 +6,4 @@ swagger
 .idea
 *.log
 migrations
+.yo-rc.json
