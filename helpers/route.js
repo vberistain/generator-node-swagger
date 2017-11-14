@@ -39,6 +39,10 @@ class Route {
             `./swagger/paths/${routeArray[routeArray.length - 1]}.json`
     }
 
+    getControllerName() {
+        return this._getRouteEntity();
+    }
+
     getOperationId(operation) {
         const operationName = operation !== 'post' ? operation : 'create';
         const parameter = this._isLastPathAParam() ? this._splittedRoute[this._splittedRoute.length - 1].replace('{', '').replace('}', '') : null;

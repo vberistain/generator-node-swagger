@@ -6,7 +6,6 @@ const SWAGGER_INDEX_FILE_PATH = 'swagger/index.json';
 const pluralize = require('pluralize');
 const enums = require('../../enums');
 const seq = require('promise-sequential');
-const writeFile = require('node-fs-writefile-promise');
 const Route = require('../../helpers/route');
 
 const OPERATIONS = Object.keys(enums.SWAGGER_OPERATIONS).map((key, i) => {
@@ -44,7 +43,7 @@ module.exports = class extends Generator {
                 type: 'input',
                 name: 'routeController',
                 message: `Select the name of the controller. Default: ${pluralize.singular(this.routeName)}`,
-                default: pluralize.singular(this.routeName)
+                default: this.route.getControllerName()
             },
             {
                 type: 'checkbox',
